@@ -4,10 +4,15 @@ Missing-data diagnostics and multiple imputation for tabular data, with a
 simulation study that shows when imputation changes the answer and when it
 cannot.
 
+[![CI](https://github.com/amina-sb/misskit/actions/workflows/ci.yml/badge.svg)](https://github.com/amina-sb/misskit/actions/workflows/ci.yml)
+
 ```bash
+git clone https://github.com/amina-sb/misskit && cd misskit
 pip install -e ".[dev]"
-pytest
+pytest                               # includes the README evidence check
 ```
+
+Requires Python 3.10 or later, numpy, pandas and scipy.
 
 ## Diagnose
 

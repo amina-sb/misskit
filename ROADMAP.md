@@ -17,5 +17,10 @@
 - [x] Seed-spread report
 
 ## Phase 4 — Release
-- [ ] Continuous integration: lint, type check, tests, evidence
-- [ ] Release workflow via trusted publishing
+- [x] Continuous integration: lint, type check, tests, evidence
+- [x] Release workflow via trusted publishing
+
+## Phase 5 — Beyond the linear model
+- [ ] Logistic-regression imputation for binary columns
+- [ ] Delta-adjustment sensitivity analysis for MNAR (how far the answer moves per unit of departure from MAR)
+- [ ] Documentation site
