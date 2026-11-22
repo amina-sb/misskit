@@ -100,3 +100,29 @@ def test_custom_predictors_and_validation() -> None:
     allgone["c"] = np.nan
     with pytest.raises(ValueError):
         mice(allgone)
+
+
+def _coverage(method: str, reps: int = 300, n: int = 60) -> float:
+    hits = 0
+    for r in range(reps):
+        holed = ampute(_frame(n, 2000 + r), ["b"], 0.6, "MAR", drivers=["a"], seed=r)
+        res = mice(holed, m=5, n_iter=5, method=method, seed=r)  # type: ignore[arg-type]
+        q = [[imp["b"].mean()] for imp in res.imputations]
+        u = [[imp["b"].var(ddof=1) / n] for imp in res.imputations]
+        lo, hi = pool(q, u, df_com=n - 1).conf_int()[0]
+        hits += lo <= 0.0 <= hi
+    return hits / reps
+
+
+def test_dropping_the_parameter_draw_undercovers() -> None:
+    """Naive expectation: the parameter draw is a refinement that barely matters.
+
+    Measured at n = 60 with 60% MAR missingness: proper imputation covers at
+    about the nominal 95%, the same imputer without the draw at about 80%.
+    The between-imputation variance is what Rubin's rules rely on, and
+    leaving out parameter uncertainty removes a large part of it.
+    """
+    proper, improper = _coverage("norm"), _coverage("norm.nob")
+    assert proper >= 0.91, proper
+    assert improper <= 0.88, improper
+    assert proper - improper >= 0.07

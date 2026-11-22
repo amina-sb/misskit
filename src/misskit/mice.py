@@ -18,6 +18,11 @@ Two univariate methods are provided:
     value plus noise without the parameter draw ("improper" imputation)
     understates the between-imputation variance and gives intervals that are
     too narrow.
+``"norm.nob"``
+    Least-squares fitted value plus normal noise, *without* the parameter
+    draw (R ``mice``'s method of the same name). Provided as the contrast
+    that shows why the draw matters: its pooled intervals undercover, by an
+    amount the test suite measures.
 ``"pmm"``
     Predictive mean matching (Algorithm 3.3, type-1 matching). The same
     posterior draw produces predicted means; each missing value is replaced
@@ -37,7 +42,7 @@ import pandas as pd
 
 __all__ = ["Method", "MiceResult", "mice"]
 
-Method = Literal["norm", "pmm"]
+Method = Literal["norm", "norm.nob", "pmm"]
 
 
 @dataclass(frozen=True)
@@ -84,6 +89,11 @@ def _impute_column(
     donors: int,
     ridge: float,
 ) -> np.ndarray:
+    if method == "norm.nob":
+        beta_hat = np.linalg.lstsq(x_obs, y_obs, rcond=None)[0]
+        resid = y_obs - x_obs @ beta_hat
+        sd = float(np.sqrt(float(resid @ resid) / max(len(y_obs) - x_obs.shape[1], 1)))
+        return np.asarray(x_mis @ beta_hat + sd * rng.standard_normal(len(x_mis)), dtype=float)
     beta, sigma = _posterior_draw(x_obs, y_obs, rng, ridge)
     if method == "norm":
         return np.asarray(x_mis @ beta + sigma * rng.standard_normal(len(x_mis)), dtype=float)
@@ -121,7 +131,7 @@ def mice(
         Gibbs iterations per imputation. Ten is usually ample for data with
         moderate missingness; inspect ``chain_means`` if in doubt.
     method:
-        ``"norm"`` or ``"pmm"``; see the module docstring.
+        ``"norm"``, ``"norm.nob"`` or ``"pmm"``; see the module docstring.
     predictors:
         Optional map from each incomplete column to the columns used to
         predict it. Defaults to every other column.
@@ -137,7 +147,7 @@ def mice(
         raise ValueError("m must be at least 1")
     if n_iter < 1:
         raise ValueError("n_iter must be at least 1")
-    if method not in ("norm", "pmm"):
+    if method not in ("norm", "norm.nob", "pmm"):
         raise ValueError(f"unknown method {method!r}")
     data = df.astype(float)
     miss = data.isna()
