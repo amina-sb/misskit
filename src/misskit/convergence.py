@@ -13,12 +13,13 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from misskit._typing import FloatArray
 from misskit.mice import MiceResult
 
 __all__ = ["chain_trace", "rhat", "rhat_table"]
 
 
-def rhat(chains: np.ndarray) -> float:
+def rhat(chains: FloatArray) -> float:
     """Gelman-Rubin potential scale reduction for an ``(m, n)`` array of draws.
 
     Uses the original (non-split) estimator::
@@ -40,7 +41,7 @@ def rhat(chains: np.ndarray) -> float:
     return float(np.sqrt(var_plus / w))
 
 
-def chain_trace(result: MiceResult) -> dict[str, np.ndarray]:
+def chain_trace(result: MiceResult) -> dict[str, FloatArray]:
     """``(m, n_iter)`` array of imputed-value means for each imputed column."""
     return {
         col: np.array([[step[col] for step in chain] for chain in result.chain_means])

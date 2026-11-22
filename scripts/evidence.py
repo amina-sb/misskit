@@ -39,6 +39,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+from misskit._typing import FloatArray
 from misskit.amputation import Mechanism, ampute
 from misskit.mice import mice
 from misskit.pooling import pool_ols
@@ -114,7 +115,7 @@ class Cell:
     width: float
 
 
-def summarise(est: np.ndarray, lo: np.ndarray, hi: np.ndarray) -> Cell:
+def summarise(est: FloatArray, lo: FloatArray, hi: FloatArray) -> Cell:
     reps = len(est)
     err = est - TRUE_BETA
     hits = int(np.sum((lo <= TRUE_BETA) & (TRUE_BETA <= hi)))

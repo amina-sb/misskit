@@ -28,6 +28,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+from misskit._typing import FloatArray
 from misskit.em import _group_patterns, em_mvn
 
 __all__ = ["LittleResult", "little_mcar_test"]
@@ -41,7 +42,7 @@ class LittleResult:
     n_patterns: int
 
 
-def little_mcar_test(data: pd.DataFrame | np.ndarray) -> LittleResult:
+def little_mcar_test(data: pd.DataFrame | FloatArray) -> LittleResult:
     """Run Little's MCAR test on numeric data with ``NaN`` for missing values.
 
     Rows that are entirely missing are dropped before testing, as they carry

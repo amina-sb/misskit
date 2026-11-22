@@ -5,10 +5,11 @@ import itertools
 import numpy as np
 import pytest
 
+from misskit._typing import FloatArray
 from misskit.em import em_mvn
 
 
-def _mvn(n: int, seed: int, p: int = 3) -> np.ndarray:
+def _mvn(n: int, seed: int, p: int = 3) -> FloatArray:
     rng = np.random.default_rng(seed)
     a = rng.standard_normal((p, p))
     cov = a @ a.T + np.eye(p)

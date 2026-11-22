@@ -15,19 +15,21 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from misskit._typing import BoolArray, FloatArray, IntArray
+
 __all__ = ["EMResult", "em_mvn"]
 
 
 @dataclass(frozen=True)
 class EMResult:
-    mean: np.ndarray
-    cov: np.ndarray
+    mean: FloatArray
+    cov: FloatArray
     n_iter: int
     converged: bool
     loglik: float
 
 
-def _group_patterns(miss: np.ndarray) -> list[tuple[np.ndarray, np.ndarray]]:
+def _group_patterns(miss: BoolArray) -> list[tuple[IntArray, BoolArray]]:
     """Return ``(row_indices, observed_mask)`` for each distinct pattern."""
     uniq, inverse = np.unique(miss, axis=0, return_inverse=True)
     inverse = inverse.ravel()
@@ -35,7 +37,7 @@ def _group_patterns(miss: np.ndarray) -> list[tuple[np.ndarray, np.ndarray]]:
 
 
 def _loglik(
-    x: np.ndarray, groups: list[tuple[np.ndarray, np.ndarray]], mu: np.ndarray, sigma: np.ndarray
+    x: FloatArray, groups: list[tuple[IntArray, BoolArray]], mu: FloatArray, sigma: FloatArray
 ) -> float:
     total = 0.0
     for rows, obs in groups:
@@ -51,7 +53,7 @@ def _loglik(
 
 
 def em_mvn(
-    x: np.ndarray,
+    x: FloatArray,
     *,
     max_iter: int = 1000,
     tol: float = 1e-8,
@@ -79,9 +81,9 @@ def em_mvn(
     if miss.all(axis=0).any():
         raise ValueError("a column is entirely missing; its moments are not identified")
 
-    mu = np.nanmean(x, axis=0)
+    mu: FloatArray = np.nanmean(x, axis=0)
     filled = np.where(miss, mu, x)
-    sigma = np.cov(filled, rowvar=False, ddof=0).reshape(p, p)
+    sigma: FloatArray = np.cov(filled, rowvar=False, ddof=0).reshape(p, p)
     sigma = sigma + np.eye(p) * 1e-9 * max(1.0, float(np.trace(sigma)))
     groups = _group_patterns(miss)
 

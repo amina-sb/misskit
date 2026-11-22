@@ -40,6 +40,8 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 
+from misskit._typing import FloatArray
+
 __all__ = ["Method", "MiceResult", "mice"]
 
 Method = Literal["norm", "norm.nob", "pmm"]
@@ -63,8 +65,8 @@ class MiceResult:
 
 
 def _posterior_draw(
-    x: np.ndarray, y: np.ndarray, rng: np.random.Generator, ridge: float
-) -> tuple[np.ndarray, float]:
+    x: FloatArray, y: FloatArray, rng: np.random.Generator, ridge: float
+) -> tuple[FloatArray, float]:
     """Draw ``(beta, sigma)`` from the posterior of ``y ~ x`` (Algorithm 3.1)."""
     n, q = x.shape
     xtx = x.T @ x
@@ -81,14 +83,14 @@ def _posterior_draw(
 
 
 def _impute_column(
-    x_obs: np.ndarray,
-    y_obs: np.ndarray,
-    x_mis: np.ndarray,
+    x_obs: FloatArray,
+    y_obs: FloatArray,
+    x_mis: FloatArray,
     method: Method,
     rng: np.random.Generator,
     donors: int,
     ridge: float,
-) -> np.ndarray:
+) -> FloatArray:
     if method == "norm.nob":
         beta_hat = np.linalg.lstsq(x_obs, y_obs, rcond=None)[0]
         resid = y_obs - x_obs @ beta_hat

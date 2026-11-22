@@ -25,6 +25,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+from misskit._typing import FloatArray
+
 __all__ = ["PooledEstimate", "pool", "pool_ols"]
 
 
@@ -32,31 +34,31 @@ __all__ = ["PooledEstimate", "pool", "pool_ols"]
 class PooledEstimate:
     """Rubin-pooled estimates, one entry per parameter."""
 
-    estimate: np.ndarray
-    within: np.ndarray
-    between: np.ndarray
-    total: np.ndarray
-    df: np.ndarray
+    estimate: FloatArray
+    within: FloatArray
+    between: FloatArray
+    total: FloatArray
+    df: FloatArray
     m: int
     names: tuple[str, ...]
 
     @property
-    def std_error(self) -> np.ndarray:
+    def std_error(self) -> FloatArray:
         return np.sqrt(self.total)
 
     @property
-    def riv(self) -> np.ndarray:
+    def riv(self) -> FloatArray:
         """Relative increase in variance due to nonresponse, ``(1 + 1/m) b / ubar``."""
         with np.errstate(divide="ignore", invalid="ignore"):
             return np.asarray((1 + 1 / self.m) * self.between / self.within, dtype=float)
 
     @property
-    def lambda_(self) -> np.ndarray:
+    def lambda_(self) -> FloatArray:
         """Proportion of total variance attributable to the missing data."""
         with np.errstate(divide="ignore", invalid="ignore"):
             return np.asarray((1 + 1 / self.m) * self.between / self.total, dtype=float)
 
-    def conf_int(self, level: float = 0.95) -> np.ndarray:
+    def conf_int(self, level: float = 0.95) -> FloatArray:
         """``(k, 2)`` array of lower and upper bounds."""
         crit = stats.t.ppf(0.5 + level / 2, self.df)
         half = crit * self.std_error
@@ -78,8 +80,8 @@ class PooledEstimate:
 
 
 def pool(
-    estimates: Sequence[Sequence[float]] | np.ndarray,
-    variances: Sequence[Sequence[float]] | np.ndarray,
+    estimates: Sequence[Sequence[float]] | FloatArray,
+    variances: Sequence[Sequence[float]] | FloatArray,
     df_com: float = np.inf,
     names: Sequence[str] | None = None,
 ) -> PooledEstimate:
@@ -124,7 +126,7 @@ def pool(
     )
 
 
-def _ols(y: np.ndarray, x: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _ols(y: FloatArray, x: FloatArray) -> tuple[FloatArray, FloatArray]:
     xtx_inv = np.linalg.inv(x.T @ x)
     beta = xtx_inv @ x.T @ y
     resid = y - x @ beta

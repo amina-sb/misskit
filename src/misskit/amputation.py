@@ -32,19 +32,21 @@ import pandas as pd
 from scipy.optimize import brentq
 from scipy.special import expit
 
+from misskit._typing import FloatArray
+
 __all__ = ["Mechanism", "ampute", "missing_probabilities"]
 
 Mechanism = Literal["MCAR", "MAR", "MNAR"]
 
 
-def _standardise(v: np.ndarray) -> np.ndarray:
+def _standardise(v: FloatArray) -> FloatArray:
     sd = float(np.std(v))
     if sd == 0.0:
         return np.zeros_like(v, dtype=float)
     return (v - float(np.mean(v))) / sd
 
 
-def _calibrated(score: np.ndarray, rate: float, strength: float) -> np.ndarray:
+def _calibrated(score: FloatArray, rate: float, strength: float) -> FloatArray:
     """Logistic probabilities ``expit(a + strength * score)`` with mean ``rate``."""
 
     def gap(a: float) -> float:
@@ -61,7 +63,7 @@ def missing_probabilities(
     mechanism: Mechanism,
     drivers: Sequence[str] = (),
     strength: float = 2.0,
-) -> np.ndarray:
+) -> FloatArray:
     """Per-row probability that ``target`` is removed under ``mechanism``.
 
     Exposed so tests and simulations can compare the realised mask against

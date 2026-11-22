@@ -7,6 +7,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
+from misskit._typing import BoolArray
 from misskit.patterns import co_missingness, missing_rates, patterns, summarize
 
 
@@ -71,7 +72,7 @@ masks = arrays(np.bool_, st.tuples(st.integers(1, 40), st.integers(1, 5)))
 
 @settings(max_examples=60, deadline=None)
 @given(masks)
-def test_pattern_counts_partition_rows(mask: np.ndarray) -> None:
+def test_pattern_counts_partition_rows(mask: BoolArray) -> None:
     df = pd.DataFrame(np.where(mask, np.nan, 1.0), columns=[f"c{i}" for i in range(mask.shape[1])])
     p = patterns(df)
     assert p["n_rows"].sum() == mask.shape[0]
@@ -80,7 +81,7 @@ def test_pattern_counts_partition_rows(mask: np.ndarray) -> None:
 
 @settings(max_examples=60, deadline=None)
 @given(masks, st.integers(0, 2**32 - 1))
-def test_row_shuffle_invariance(mask: np.ndarray, seed: int) -> None:
+def test_row_shuffle_invariance(mask: BoolArray, seed: int) -> None:
     df = pd.DataFrame(np.where(mask, np.nan, 1.0), columns=[f"c{i}" for i in range(mask.shape[1])])
     perm = np.random.default_rng(seed).permutation(len(df))
     shuffled = df.iloc[perm].reset_index(drop=True)
