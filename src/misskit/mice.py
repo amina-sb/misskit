@@ -117,6 +117,7 @@ def mice(
     method: Method = "norm",
     *,
     predictors: dict[str, Sequence[str]] | None = None,
+    delta: dict[str, float] | None = None,
     donors: int = 5,
     ridge: float = 1e-5,
     seed: int | np.random.Generator | None = None,
@@ -137,6 +138,12 @@ def mice(
     predictors:
         Optional map from each incomplete column to the columns used to
         predict it. Defaults to every other column.
+    delta:
+        Optional map from an incomplete column to a shift added to its
+        imputed values in every iteration, so the other columns are imputed
+        from the shifted values. ``delta = 0`` is MAR; a non-zero delta
+        encodes an MNAR departure of known size (van Buuren 2018, section
+        3.8). Use :func:`misskit.sensitivity.delta_sensitivity` to scan a grid.
     donors:
         Donor pool size for ``"pmm"``.
     ridge:
@@ -164,6 +171,10 @@ def mice(
             if c not in preds:
                 raise KeyError(f"{c!r} has no missing values to impute")
             preds[c] = list(ps)
+    shift = dict(delta or {})
+    for c in shift:
+        if c not in preds:
+            raise KeyError(f"delta given for {c!r}, which has no missing values")
     rng = seed if isinstance(seed, np.random.Generator) else np.random.default_rng(seed)
 
     # Work on a plain array: pandas indexing inside the Gibbs loop costs more
@@ -196,6 +207,7 @@ def mice(
                 x = np.column_stack([np.ones(n_rows), filled[:, pred_idx[c]]])
                 y = filled[:, j]
                 draws = _impute_column(x[~holes], y[~holes], x[holes], method, rng, donors, ridge)
+                draws = draws + shift.get(c, 0.0)
                 filled[holes, j] = draws
                 step[c] = float(draws.mean())
             trace.append(step)
