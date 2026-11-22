@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Phase 1 — Missingness patterns and amputation
-- [ ] Pattern matrix, per-column rates and co-missingness summary
-- [ ] Amputation generators for MCAR, MAR and MNAR with a documented mechanism
-- [ ] Little's MCAR test, validated by simulated size and power
+- [x] Pattern matrix, per-column rates and co-missingness summary
+- [x] Amputation generators for MCAR, MAR and MNAR with a documented mechanism
+- [x] Little's MCAR test, validated by simulated size and power
 
 ## Phase 2 — Multiple imputation
 - [ ] MICE with Bayesian linear regression draws (proper imputation)
