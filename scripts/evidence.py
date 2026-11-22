@@ -54,6 +54,7 @@ REPS = 200
 MAIN_SEED = 20261122
 SPREAD_SEEDS = (1, 2, 3, 4, 5)
 SPREAD_REPS = 100
+DELTAS = (-0.5, 0.0, 0.25, 0.5, 0.75, 1.0, 1.5)
 MECHANISMS: tuple[Mechanism, ...] = ("MCAR", "MAR", "MNAR")
 README = Path(__file__).resolve().parents[1] / "README.md"
 
@@ -180,15 +181,54 @@ def spread_table(runs: list[dict[tuple[str, str], Cell]]) -> str:
     return "\n".join(lines)
 
 
+def run_delta(seed: int, reps: int) -> dict[float, Cell]:
+    """MICE under the MNAR scenario with the imputed x2 shifted by each delta.
+
+    Every delta sees the same datasets and the same imputation seed, so the
+    rows differ only by the shift.
+    """
+    rng = np.random.default_rng([seed, 99])
+    data = []
+    for _ in range(reps):
+        full = generate(N, rng)
+        data.append((make_holes(full, "MNAR", rng), int(rng.integers(2**32))))
+    out: dict[float, Cell] = {}
+    for d in DELTAS:
+        rows = []
+        for holed, s in data:
+            res = mice(holed, m=M, n_iter=N_ITER, method="norm", delta={"x2": d}, seed=s)
+            pooled = pool_ols(res.imputations, "y", ["x1", "x2"])
+            lo, hi = pooled.conf_int()[2]
+            rows.append((float(pooled.estimate[2]), float(lo), float(hi)))
+        arr = np.array(rows)
+        out[d] = summarise(arr[:, 0], arr[:, 1], arr[:, 2])
+    return out
+
+
+def delta_table(cells: dict[float, Cell]) -> str:
+    lines = [
+        "| delta added to imputed x2 | bias (95% MC interval) | RMSE | coverage of 95% CI "
+        "(Wilson interval) |",
+        "| --- | --- | --- | --- |",
+    ]
+    for d, c in cells.items():
+        lines.append(
+            f"| {d:+.2f} | {c.bias:+.3f} (±{c.bias_half:.3f}) | {c.rmse:.3f} | "
+            f"{c.coverage:.3f} ({c.cov_lo:.3f}-{c.cov_hi:.3f}) |"
+        )
+    return "\n".join(lines)
+
+
 def render() -> dict[str, str]:
     main = main_table(run(MAIN_SEED, REPS))
     spread = spread_table([run(s, SPREAD_REPS) for s in SPREAD_SEEDS])
-    return {"main": main, "spread": spread}
+    delta = delta_table(run_delta(MAIN_SEED, REPS))
+    return {"main": main, "spread": spread, "delta": delta}
 
 
 def readme_blocks(text: str) -> dict[str, str]:
     blocks = {}
-    for name in ("main", "spread"):
+    for name in ("main", "spread", "delta"):
         m = re.search(
             rf"<!-- evidence:{name}:start -->\n(.*?)\n<!-- evidence:{name}:end -->", text, re.S
         )

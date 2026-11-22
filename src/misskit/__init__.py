@@ -7,6 +7,7 @@ from misskit.mcar import LittleResult, little_mcar_test
 from misskit.mice import MiceResult, mice
 from misskit.patterns import MissingSummary, co_missingness, missing_rates, patterns, summarize
 from misskit.pooling import PooledEstimate, pool, pool_ols
+from misskit.sensitivity import delta_sensitivity, tipping_point
 
 __version__ = "0.1.0"
 
@@ -20,6 +21,7 @@ __all__ = [
     "ampute",
     "chain_trace",
     "co_missingness",
+    "delta_sensitivity",
     "em_mvn",
     "little_mcar_test",
     "mice",
@@ -31,4 +33,5 @@ __all__ = [
     "rhat",
     "rhat_table",
     "summarize",
+    "tipping_point",
 ]

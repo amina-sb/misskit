@@ -171,8 +171,53 @@ The conclusions above hold at every seed. The MNAR complete-case bias in the
 main table (+0.034 ± 0.017) is just outside zero, but no other seed puts it
 outside -0.018 to +0.008, so it reads as Monte Carlo noise and not as a bias.
 
+## How far from MAR before the answer changes?
+
+The MNAR row above has no fix that uses only the observed data. What you can
+do is ask how large a departure from MAR would have to be before the
+conclusion moves. `mice(..., delta={"x2": d})` imputes under MAR and adds
+`d` to every imputed `x2` inside each iteration, which is the same as assuming
+the missing values are on average `d` higher than comparable observed ones.
+`misskit.delta_sensitivity` scans a grid of `d` and pools the coefficient at
+each one.
+
+```python
+holed = misskit.ampute(df, ["x2"], 0.4, "MNAR", seed=1)  # df: y, x1, x2, n = 300
+misskit.delta_sensitivity(holed, "x2", [0, 0.5, 1.0], "y", ["x1", "x2"], term="x2", m=20, seed=2)
+```
+
+```
+ delta  estimate  std_error  lower  upper
+   0.0     0.822      0.103  0.618  1.025
+   0.5     0.827      0.081  0.666  0.988
+   1.0     0.719      0.068  0.585  0.853
+```
+
+On the MNAR scenario (200 datasets; each row uses the same datasets and
+imputation seeds):
+
+<!-- evidence:delta:start -->
+| delta added to imputed x2 | bias (95% MC interval) | RMSE | coverage of 95% CI (Wilson interval) |
+| --- | --- | --- | --- |
+| -0.50 | -0.096 (±0.018) | 0.160 | 0.925 (0.880-0.954) |
+| +0.00 | +0.059 (±0.017) | 0.134 | 0.945 (0.904-0.969) |
+| +0.25 | +0.072 (±0.015) | 0.132 | 0.930 (0.886-0.958) |
+| +0.50 | +0.048 (±0.014) | 0.109 | 0.960 (0.923-0.980) |
+| +0.75 | -0.002 (±0.012) | 0.085 | 0.960 (0.923-0.980) |
+| +1.00 | -0.064 (±0.010) | 0.098 | 0.945 (0.904-0.969) |
+| +1.50 | -0.192 (±0.008) | 0.201 | 0.205 (0.155-0.266) |
+<!-- evidence:delta:end -->
+
+The missing `x2` values really are higher than MAR predicts, and a shift of
+about +0.75 standard deviations removes the bias. The curve is **not
+monotone**, though. Bias rises from +0.059 to +0.072 before it falls,
+because shifting a subset of a covariate changes its covariance with `y`
+linearly in `d` and its variance quadratically. Two different deltas can
+therefore give the same estimate. Report the whole grid; a single "tipping
+point" is not enough.
+
 ```bash
-python scripts/evidence.py           # print the tables (about 45 s)
+python scripts/evidence.py           # print the tables (about 65 s)
 python scripts/evidence.py --check   # exit 1 if README.md has drifted
 ```
 
@@ -187,5 +232,6 @@ python scripts/evidence.py --check   # exit 1 if README.md has drifted
 | `mice` | chained-equation imputation: `norm`, `pmm`, `norm.nob` |
 | `pooling` | Rubin's rules with Barnard-Rubin degrees of freedom; pooled OLS |
 | `convergence` | Gelman-Rubin R-hat across imputation chains |
+| `sensitivity` | delta-adjustment scan for departures from MAR |
 
 See [ROADMAP.md](ROADMAP.md) for what comes next.

@@ -39,7 +39,7 @@ def test_summarise_by_hand() -> None:
 
 def test_readme_blocks_parse() -> None:
     text = "x\n<!-- evidence:main:start -->\n| a |\n<!-- evidence:main:end -->\n"
-    assert evidence.readme_blocks(text) == {"main": "| a |", "spread": ""}
+    assert evidence.readme_blocks(text) == {"main": "| a |", "spread": "", "delta": ""}
 
 
 def test_readme_matches_evidence_script() -> None:

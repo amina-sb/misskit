@@ -22,5 +22,5 @@
 
 ## Phase 5 — Beyond the linear model
 - [ ] Logistic-regression imputation for binary columns
-- [ ] Delta-adjustment sensitivity analysis for MNAR (how far the answer moves per unit of departure from MAR)
+- [x] Delta-adjustment sensitivity analysis for MNAR (how far the answer moves per unit of departure from MAR)
 - [ ] Documentation site
