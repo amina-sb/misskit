@@ -21,7 +21,9 @@ holed = misskit.ampute(df, ["income"], rate=0.3, mechanism="MAR", drivers=["age"
 
 misskit.patterns(holed)  # distinct patterns with row counts
 misskit.missing_rates(holed)  # per-column fraction missing
-misskit.little_mcar_test(holed)  # LittleResult(statistic=151.8, df=2, p_value=1.1e-33, n_patterns=2)
+misskit.little_mcar_test(
+    holed
+)  # LittleResult(statistic=151.8, df=2, p_value=1.1e-33, n_patterns=2)
 ```
 
 ## Simulate a mechanism
