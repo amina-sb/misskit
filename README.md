@@ -181,6 +181,18 @@ the missing values are on average `d` higher than comparable observed ones.
 `misskit.delta_sensitivity` scans a grid of `d` and pools the coefficient at
 each one.
 
+```python
+holed = misskit.ampute(df, ["x2"], 0.4, "MNAR", seed=1)  # df: y, x1, x2, n = 300
+misskit.delta_sensitivity(holed, "x2", [0, 0.5, 1.0], "y", ["x1", "x2"], term="x2", m=20, seed=2)
+```
+
+```
+ delta  estimate  std_error  lower  upper
+   0.0     0.822      0.103  0.618  1.025
+   0.5     0.827      0.081  0.666  0.988
+   1.0     0.719      0.068  0.585  0.853
+```
+
 On the MNAR scenario (200 datasets; each row uses the same datasets and
 imputation seeds):
 
