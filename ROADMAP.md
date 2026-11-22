@@ -12,9 +12,9 @@
 - [x] Chain convergence diagnostic (R-hat)
 
 ## Phase 3 — Evidence: when imputation changes the answer
-- [ ] Simulation of bias and CI coverage for complete-case, mean and MICE under each mechanism
-- [ ] Evidence script that prints the README table and fails when it drifts
-- [ ] Seed-spread report
+- [x] Simulation of bias and CI coverage for complete-case, mean and MICE under each mechanism
+- [x] Evidence script that prints the README table and fails when it drifts
+- [x] Seed-spread report
 
 ## Phase 4 — Release
 - [ ] Continuous integration: lint, type check, tests, evidence

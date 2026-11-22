@@ -164,26 +164,40 @@ def mice(
             preds[c] = list(ps)
     rng = seed if isinstance(seed, np.random.Generator) else np.random.default_rng(seed)
 
+    # Work on a plain array: pandas indexing inside the Gibbs loop costs more
+    # than the regressions themselves.
+    values = data.to_numpy(dtype=float)
+    holes_by_col = miss.to_numpy()
+    pos = {str(c): i for i, c in enumerate(data.columns)}
+    for c, ps in preds.items():
+        unknown = [p for p in ps if str(p) not in pos]
+        if unknown:
+            raise KeyError(f"predictors for {c!r} not in frame: {unknown}")
+    target_idx = {c: pos[c] for c in order}
+    pred_idx = {c: [pos[str(p)] for p in preds[c]] for c in order}
+    n_rows = values.shape[0]
+
     imputations: list[pd.DataFrame] = []
     traces: list[list[dict[str, float]]] = []
     for _ in range(m):
-        filled = data.copy()
+        filled = values.copy()
         for c in order:  # initialise by random draws from the observed values
-            obs = data[c].dropna().to_numpy()
-            holes = miss[c].to_numpy()
-            filled.loc[holes, c] = rng.choice(obs, size=int(holes.sum()))
+            j = target_idx[c]
+            holes = holes_by_col[:, j]
+            filled[holes, j] = rng.choice(values[~holes, j], size=int(holes.sum()))
         trace: list[dict[str, float]] = []
         for _ in range(n_iter):
             step: dict[str, float] = {}
             for c in order:
-                holes = miss[c].to_numpy()
-                x = np.column_stack([np.ones(len(filled)), filled[preds[c]].to_numpy(dtype=float)])
-                y = filled[c].to_numpy(dtype=float)
+                j = target_idx[c]
+                holes = holes_by_col[:, j]
+                x = np.column_stack([np.ones(n_rows), filled[:, pred_idx[c]]])
+                y = filled[:, j]
                 draws = _impute_column(x[~holes], y[~holes], x[holes], method, rng, donors, ridge)
-                filled.loc[holes, c] = draws
+                filled[holes, j] = draws
                 step[c] = float(draws.mean())
             trace.append(step)
-        imputations.append(filled)
+        imputations.append(pd.DataFrame(filled, index=data.index, columns=data.columns))
         traces.append(trace)
     return MiceResult(
         imputations=imputations,

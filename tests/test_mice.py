@@ -92,6 +92,8 @@ def test_custom_predictors_and_validation() -> None:
     assert res.m == 1
     with pytest.raises(KeyError):
         mice(holed, predictors={"a": ["b"]})
+    with pytest.raises(KeyError):
+        mice(holed, predictors={"b": ["a", "nope"]})
     with pytest.raises(ValueError):
         mice(holed, m=0)
     with pytest.raises(ValueError):
